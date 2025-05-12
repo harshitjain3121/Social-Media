@@ -36,6 +36,9 @@ const registerUser=async(req,res,next)=>{
 }
 
 
+
+
+
 // =====================================LOGIN USER
 // POST : api/users/login
 // UNPROTECTED
@@ -50,57 +53,97 @@ const loginUser=async(req,res,next)=>{
         if(!user){
             return next(new HttpError("Invalid Credential",422))
         }
-        const {uPassword, ...userInfo}=user;
+        // const {uPassword, ...userInfo}=user;
         const comparePass=await bcrypt.compare(password,user?.password);
         if(!comparePass){
             return next(new HttpError("Invalid Credential",422))
         }
         const token=await jwt.sign({id: user?._id},process.env.JWT_SECRET,{expiresIn: "1h"});
-        res.json({token,id: user?._id, ...userInfo}).status(200);
+        res.json({token,id: user?._id}).status(200);
+        // res.json({token,id: user?._id, ...userInfo}).status(200);
     }catch(error){
         return next(new HttpError(error))
     }
 }
+
+
+
+
 
 // =====================================GET USER
 // GET : api/users/:id
 // PROTECTED
 const getUser=async(req,res,next)=>{
     try{
-        res.json("Get User")
+        const {id}=req.params;
+        const user=await UserModel.findById(id);
+        if(!user){
+            return next(new HttpError("User not found",404));
+        }
+        res.json(user).status(200);
     }catch(error){
         return next(new HttpError(error))
     }
 }
+
+
+
+
 
 // =====================================GET USERS
 // GET : api/users
 // PROTECTED
 const getUsers=async(req,res,next)=>{
     try{
-        res.json("Get Users")
+        const users=await UserModel.find().limit(10).sort({createAt : -1})
+        res.json(users).status(200);
     }catch(error){
         return next(new HttpError(error))
     }
 }
+
+
+
+
 
 // =====================================EDIT USER
 // PATCH : api/users/:id
 // PROTECTED
 const editUser=async(req,res,next)=>{
     try{
-        res.json("Edit User")
+        const {fullName, bio}= req.body;
+        const editedUser=await UserModel.findByIdAndUpdate(req.user.id, {fullName,bio},{new:true})
+        res.json(editedUser).status(200)
     }catch(error){
         return next(new HttpError(error))
     }
 }
+
+
+
+
 
 // =====================================FOLLOW/UNFOLLOW USER
 // GET : api/users/:id/follow-unfollow
 // PROTECTED
 const followUnfollowUser=async(req,res,next)=>{
     try{
-        res.json("follow/Unfollow User")
+        const userToFollowId= req.params.id;
+        if(req.user.id== userToFollowId){
+            return next(new HttpError("You can't follow/unfollow yourself",422))
+        }
+        const currentUser=await UserModel.findById(req.user.id);
+        const isFollowing=currentUser?.following?.includes(userToFollowId);
+        if(!isFollowing){
+            const updatedUser=await UserModel.findByIdAndUpdate(userToFollowId,{$push: {followers: req.user.id}},{new: true})
+            await UserModel.findByIdAndUpdate(req.user.id,{$push: {following: userToFollowId}},{new: true})
+            res.json(updatedUser)
+        }
+        else{
+            const updatedUser=await UserModel.findByIdAndUpdate(userToFollowId,{$pull: {followers: req.user.id}},{new: true})
+            await UserModel.findByIdAndUpdate(req.user.id,{$pull: {following: userToFollowId}},{new: true})
+            res.json(updatedUser)
+        }
     }catch(error){
         return next(new HttpError(error))
     }
