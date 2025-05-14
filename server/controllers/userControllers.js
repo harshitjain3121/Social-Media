@@ -2,6 +2,10 @@ const HttpError=require('../models/errorModel')
 const UserModel=require('../models/userModel')
 const bcrypt=require("bcryptjs")
 const jwt=require("jsonwebtoken")
+const uuid=require("uuid").v4;
+const fs=require("fs")
+const path=require("path")
+const cloudinary=require("../utils/cloudinary")
 
 
 
@@ -154,7 +158,27 @@ const followUnfollowUser=async(req,res,next)=>{
 // PROTECTED
 const changeUserAvatar=async(req,res,next)=>{
     try{
-        res.json("Change User Avatar")
+        if(!req.files.avatar){
+            return next(new HttpError("Please choose an image",422))
+        }
+        const {avatar}=req.files;
+        if(avatar.size>500000){
+            return next(new HttpError("Profile picture too big. Should be less than 500kb"))
+        }
+        let fileName=avatar.name;
+        let splittedFilename=fileName.split(".");
+        let newFilename=splittedFilename[0]+uuid()+"."+splittedFilename[splittedFilename.length-1];
+        avatar.mv(path.join(__dirname,"..","uploads",newFilename),async(err)=>{
+            if(err){
+                return next(new HttpError(err))
+            }
+            const result=await cloudinary.uploader.upload(path.join(__dirname,"..","uploads",newFilename),{resource_type: "image"});
+            if(!result.secure_url){
+                return next(new HttpError("Couldn't upload image to cloudinary",422))
+            }
+            const updatedUser=await UserModel.findByIdAndUpdate(req.user.id, {profilePhoto: result?.secure_url},{new: true})
+            res.json(updatedUser).status(200)
+        })
     }catch(error){
         return next(new HttpError(error))
     }
