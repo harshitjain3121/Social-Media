@@ -9,6 +9,7 @@ const authMiddleware= async (req,res,next)=>{
         jwt.verify(token, process.env.JWT_SECRET, (err,info)=>{
             if(err){
                 return next(new HttpError("Unauthorized. Invalid token",403))
+                // return res.json({ok:false, msg:"yaha par."})
             }
             req.user=info;
             next()
@@ -16,6 +17,7 @@ const authMiddleware= async (req,res,next)=>{
     }
     else{
         return next(new HttpError("Unauthorized. No token",401))
+        // return res.json({ok:false, msg:"Unauthorized."})
     }
 }
 module.exports=authMiddleware;
