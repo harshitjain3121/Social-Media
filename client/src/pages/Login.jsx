@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { userActions } from '../store/user-slice';
+import { getApiUrl } from '../utils/apiConfig';
 
 const Login = () => {
   const [userData, setUserData] = useState({email: "", password: ""})
@@ -22,14 +23,14 @@ const Login = () => {
   const loginUser=async(e)=>{
     e.preventDefault();
     try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/users/login`, userData);
+        const response = await axios.post(`${getApiUrl()}/users/login`, userData);
         if(response.status == 200){
           dispatch(userActions.changeCurrentUser(response?.data))
           localStorage.setItem("currentUser", JSON.stringify(response?.data))
           navigate('/')
         }
     } catch (err) {
-        setError(err.response?.data?.message)
+        setError(err.response?.data?.message || 'Login failed. Please try again.')
     }
   }
 

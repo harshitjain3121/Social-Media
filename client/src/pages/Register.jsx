@@ -2,6 +2,7 @@ import React,{ useState } from 'react'
 import { FaEye , FaEyeSlash } from "react-icons/fa";
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom'
+import { getApiUrl } from '../utils/apiConfig';
 
 const Register = () => {
   const [userData, setUserData] = useState({fullName: "", email: "", password: "", confirmPassword: ""})
@@ -20,12 +21,12 @@ const Register = () => {
   const registerUser=async(e)=>{
     e.preventDefault();
     try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/users/register`, userData);
+        const response = await axios.post(`${getApiUrl()}/users/register`, userData);
         if(response.statusText=="OK"){
           navigate('/login')
         }
     } catch (err) {
-        setError(err.response?.data?.message)
+        setError(err.response?.data?.message || 'Registration failed. Please try again.')
     }
   }
 
