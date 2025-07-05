@@ -82,7 +82,7 @@ const loginUser=async(req,res,next)=>{
 const getUser=async(req,res,next)=>{
     try{
         const {id}=req.params;
-        const user=await UserModel.findById(id);
+        const user=await UserModel.findById(id).select("-password");
         if(!user){
             return next(new HttpError("User not found",404));
         }
@@ -101,7 +101,7 @@ const getUser=async(req,res,next)=>{
 // PROTECTED
 const getUsers=async(req,res,next)=>{
     try{
-        const users=await UserModel.find().limit(10).sort({createAt : -1})
+        const users=await UserModel.find().limit(10).sort({createdAt : -1})
         res.json(users).status(200);
     }catch(error){
         return next(new HttpError(error))

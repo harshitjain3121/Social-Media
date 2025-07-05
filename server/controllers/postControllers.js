@@ -24,7 +24,7 @@ const createPost=async(req,res,next)=>{
         }
         else{
             const {image}=req.files;
-            if(image.size>1000000){
+            if(image.size>500000){
                 return next(new HttpError("Image is too big. Should be less than 500kb",422))
             }
             let fileName=image.name;
@@ -76,7 +76,7 @@ const getPost=async(req,res,next)=>{
 // PROTECTED
 const getPosts=async(req,res,next)=>{
     try{
-        const posts = await PostModel.find().sort({createAt: -1})
+        const posts = await PostModel.find().sort({createdAt: -1})
         res.json(posts)
     }catch(error){
         return next(new HttpError(error))
@@ -177,7 +177,7 @@ const likeDislikePost=async(req,res,next)=>{
 const getUserPosts=async(req,res,next)=>{
     try{
         const userId=req.params.id;
-        const posts=await UserModel.findById(userId).populate({path: "posts", options: {sort: {createAt: -1}}})
+        const posts=await UserModel.findById(userId).populate({path: "posts", options: {sort: {createdAt: -1}}})
         res.json(posts);
     }catch(error){
         return next(new HttpError(error))

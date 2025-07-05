@@ -40,7 +40,7 @@ const getMessages=async(req,res,next)=>{
         const {receiverId}=req.params;
         const conversation = await ConversationModel.findOne({participants: {$all: [req.user.id,receiverId]}})
         if(!conversation){
-            return next(new HttpError("You have no coonversation with this person",404))
+            return next(new HttpError("You have no conversation with this person",404))
         }
         const messages=await MessageModel.find({conversationId: conversation._id}).sort({createdAt: 1})
         res.json(messages)

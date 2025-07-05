@@ -1,18 +1,35 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CiSearch } from 'react-icons/ci'
 import ProfileImage from './ProfileImage'
 import { useSelector } from 'react-redux';
+import axios from 'axios';
 
 
 const Navbar = () => {
+  const [user,setUser]=useState({})
   const userId = useSelector(state => state?.user?.currentUser?.id);
   const token= useSelector(state => state?.user?.currentUser?.token);
-  const profilePhoto= useSelector(state => state?.user?.currentUser?.profilePhoto);
 
 
   
   const navigate=useNavigate()
+
+
+  const getUser=async()=>{
+    try {
+      const response=await axios.get(`${import.meta.env.VITE_API_URL}/users/${userId}`, {withCredentials: true, headers: {Authorization: `Bearer ${token}`}})
+      setUser(response?.data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    getUser()
+  },[])
+
+
 
   useEffect(() => {
     if(!token){
@@ -41,7 +58,7 @@ const Navbar = () => {
         </form>
         <div className="navbar__right">
           <Link to={`/users/${userId}`} className="navbar__profile">
-            <ProfileImage image={profilePhoto} />
+            <ProfileImage image={user?.profilePhoto} />
           </Link>
           {token? <Link to="/logout">Logout</Link> : <Link to="/login">Login</Link>}
         </div>

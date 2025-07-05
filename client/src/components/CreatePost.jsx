@@ -2,11 +2,13 @@ import React, { useState } from 'react'
 import ProfileImage from './ProfileImage';
 import { useSelector } from "react-redux"
 import { SlPicture } from "react-icons/sl"
+import { Link } from 'react-router-dom';
 
 const CreatePost = ({onCreatePost, error}) => {
   const [body, setBody] = useState("")
   const [image, setImage] = useState("")
   const profilePhoto= useSelector(state=>state?.user?.currentUser?.profilePhoto)
+  const userId= useSelector(state=>state?.user?.currentUser?.id)
 
 
   const createPost=(e) =>{
@@ -27,7 +29,9 @@ const CreatePost = ({onCreatePost, error}) => {
     <form className="createPost" encType='multipart/form-data' onSubmit={createPost}>
       {error && <p className='createPost__error-message'>{error}</p>}
       <div className="createPost__top">
-        <ProfileImage image={profilePhoto} />
+        <Link to={`/users/${userId}`}>
+          <ProfileImage image={profilePhoto} />
+        </Link>
         <textarea value={body} onChange={e=> setBody(e.target.value)} placeholder="What's on your mind?" />
       </div>
       <div className="createPost__bottom">
