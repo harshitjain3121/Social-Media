@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { LuUpload } from 'react-icons/lu'
 import { FaCheck } from 'react-icons/fa'
 import { userActions } from '../store/user-slice'
+import { uiSliceActions } from '../store/ui-slice'
 
 const UserProfile = () => {
     
@@ -31,11 +32,7 @@ const UserProfile = () => {
             console.log(error)
         }
     }
-
-    useEffect(()=>{
-        getUser()
-    },[userId])
-
+    
     const changeAvatarHandlar=async(e)=>{
         e.preventDefault();
         setAvatarTouched(true)
@@ -50,15 +47,24 @@ const UserProfile = () => {
         }
     }
 
-    const openEditProfileModel=async()=>{
-
+    const openEditProfileModal=async()=>{
+        dispatch(uiSliceActions.openEditProfileModal())
     }
 
     const followUnfollowUser=async()=>{
-
+        try {
+            const response=await axios.get(`${import.meta.env.VITE_API_URL}/users/${userId}/follow-unfollow` , {withCredentials: true, headers: {Authorization: `Bearer ${token}`}})
+            setFollowsUser(response?.data?.followers?.includes(loggedInUserId))
+        } catch (error) {
+            console.log(error)
+        }
     }
-
-
+    
+    
+    useEffect(()=>{
+        getUser()
+    },[userId,followsUser,avatar])
+    
 
   return (
     <section className="profile">
@@ -88,7 +94,7 @@ const UserProfile = () => {
                 </li>
             </ul>
             <div className="profile__actions-wrapper">
-                    {user?._id==loggedInUserId? <button className="btn" onClick={openEditProfileModel}>Edit Profile</button>: <button onClick={followUnfollowUser} className='btn dark'>{followsUser?"Unfollow" : "follow"}</button>}
+                    {user?._id==loggedInUserId? <button className="btn" onClick={openEditProfileModal}>Edit Profile</button>: <button onClick={followUnfollowUser} className='btn dark'>{followsUser?"Unfollow" : "follow"}</button>}
                     {user?._id!=loggedInUserId && <Link to={`/messages/${user?._id}`} className='btn default'>Message</Link>}
             </div>
             <article className="profile__bio">

@@ -1,5 +1,5 @@
 import React, { useEffect,useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link, useLocation } from 'react-router-dom'
 import ProfileImage from './ProfileImage'
 import LikeDislikePost from './LikeDislikePost'
@@ -7,20 +7,23 @@ import TrimText from '../helpers/TrimText'
 import TimeAgo from 'react-timeago'
 import axios from 'axios'
 import { FaRegCommentDots } from 'react-icons/fa'
+import { HiDotsHorizontal } from 'react-icons/hi'
 import { IoMdShare } from 'react-icons/io'
 import BookMarksPost from './BookMarksPost'
+import { uiSliceActions } from '../store/ui-slice'
 
-const Feed = ({post}) => {
+const Feed = ({post, onDeletePost}) => {
     const [creator, setCreator]=useState({})
     const token= useSelector(state=>state?.user?.currentUser?.token)
     const userId= useSelector(state=>state?.user?.currentUser?.id)
     const [showFeedHeaderMenu, setShowFeedHeaderMenu]=useState(false);
+    const dispatch=useDispatch()
 
 
     const location=useLocation();
 
 
-    const getPostCreater=async () => {
+    const getPostCreator=async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/${post?.creator}`, {withCredentials: true, headers: {Authorization: `Bearer ${token}`}})
             setCreator(response?.data);
@@ -28,11 +31,26 @@ const Feed = ({post}) => {
             console.log(error)
         }
     }
+    const closeFeedHeaderMenu=()=>{
+        setShowFeedHeaderMenu(false);
+    }
+
+    const showEditPostModal=async()=>{
+        dispatch(uiSliceActions?.openEditPostModal(post._id))
+        closeFeedHeaderMenu()
+    }
+
+    
+
+    const deletePost= async()=>{
+        onDeletePost(post._id)
+        closeFeedHeaderMenu()
+    }
 
 
 
     useEffect(()=>{
-        getPostCreater()
+        getPostCreator()
     },[])
 
 
@@ -47,12 +65,13 @@ const Feed = ({post}) => {
                     <small><TimeAgo date={post?.createdAt} /></small>
                 </div>
             </Link>
-            {showFeedHeaderMenu && userId==post?.creator && location.pathname.includes("users") && <menu className='feed__headermenu'>
-                <button onClick={showFeedHeaderMenu}>Edit</button>
+            {showFeedHeaderMenu && userId==post?.creator && location.pathname.includes("users") && <menu className='feed__header-menu'>
+                <button onClick={showEditPostModal}>Edit</button>
                 <button onClick={deletePost}>Delete</button>
             </menu>}
+            {userId==post?.creator && location.pathname.includes("users") && <button onClick={()=>setShowFeedHeaderMenu(!showFeedHeaderMenu)}><HiDotsHorizontal /></button>}
         </header>
-        <Link to={`posts/${post?._id}`} className='feed__body'>
+        <Link to={`/posts/${post?._id}`} className='feed__body'>
             <p><TrimText item={post?.body} maxLength={150} /></p>
             <div className='feed__images'>
                 <img src={post?.image} alt=""/>
@@ -62,7 +81,7 @@ const Feed = ({post}) => {
             <div>
                 <LikeDislikePost post={post}/>
                 <button className="feed__footer-comments">
-                    <Link to={`/posts/${post?.id}`}><FaRegCommentDots/></Link>
+                    <Link to={`/posts/${post?._id}`}><FaRegCommentDots/></Link>
                     <small>{post?.comments?.length}</small>
                 </button>
                 <button className="feed__footer-share"><IoMdShare/></button>
