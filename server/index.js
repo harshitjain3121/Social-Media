@@ -12,6 +12,10 @@ app.use(express.json({ extended: true }));
 app.use(cors({ credentials: true, origin: ["http://localhost:5173", "https://social-media-zeta-tan.vercel.app"] }));
 app.use(upload());
 
+app.get('/', (req, res) => {
+  res.send('API is running!');
+});
+
 app.use("/api", routes);
 
 app.use(notFound);
